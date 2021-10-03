@@ -8,6 +8,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import ckrae.chess.pieces.Knight;
+import ckrae.chess.pieces.Pawn;
+
 public class BoardTest {
 
 	private Player white;

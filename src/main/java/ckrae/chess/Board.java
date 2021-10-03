@@ -3,6 +3,14 @@ package ckrae.chess;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.lang3.Validate;
 
+import ckrae.chess.pieces.Bishop;
+import ckrae.chess.pieces.King;
+import ckrae.chess.pieces.Knight;
+import ckrae.chess.pieces.Pawn;
+import ckrae.chess.pieces.Piece;
+import ckrae.chess.pieces.Queen;
+import ckrae.chess.pieces.Rook;
+
 public class Board {
 
 	public static int size = 8;

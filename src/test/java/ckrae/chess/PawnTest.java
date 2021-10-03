@@ -13,6 +13,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import ckrae.chess.pieces.Pawn;
+import ckrae.chess.pieces.Piece;
+
 @ExtendWith(MockitoExtension.class)
 @RunWith(JUnitPlatform.class)
 public class PawnTest {

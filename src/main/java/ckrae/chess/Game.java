@@ -10,7 +10,15 @@ public class Game {
 
 	private Board board;
 
-	public void play() {
+	public Game() {
+
+		this.playerWhite = new ConsolePlayer(Color.WHITE);
+		this.playerBlack = new ConsolePlayer(Color.BLACK);
+		this.board = new Board(playerWhite, playerBlack);
+
+	}
+
+	public void loop() {
 
 		Validate.notNull(playerWhite, "player white is null");
 		Validate.notNull(playerBlack, "player black is null");
@@ -33,6 +41,10 @@ public class Game {
 			return playerBlack;
 		return playerWhite;
 
+	}
+
+	public Board getBoard() {
+		return this.board;
 	}
 
 }
