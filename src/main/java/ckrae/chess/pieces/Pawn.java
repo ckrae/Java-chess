@@ -42,15 +42,20 @@ public class Pawn extends Piece {
 
 		if (this.getColor() == Color.WHITE) {
 
+			// one step forward
 			if (start.equals(target, 0, 1) && !board.isOccupied(target))
 				return true;
 
-			if (start.getX() == target.getX() + 1 && start.getY() == target.getY() - 1 && board.isOccupied(target)
-					&& !board.isOwner(player, target))
+			// two step forward first move only
+			if (start.getY() == 2 && start.equals(target, 0, 2) && !board.isOccupied(target))
 				return true;
 
-			if (start.getX() == target.getX() - 1 && start.getY() == target.getY() - 1 && board.isOccupied(target)
-					&& !board.isOwner(player, target))
+			// diagonal capturing
+			if (start.equals(target, 1, 1) && board.isOccupied(target) && !board.isOwner(player, target))
+				return true;
+
+			// diagonal capturing
+			if (start.equals(target, -1, 1) && board.isOccupied(target) && !board.isOwner(player, target))
 				return true;
 
 			return false;
@@ -59,16 +64,26 @@ public class Pawn extends Piece {
 
 		if (this.getColor() == Color.BLACK) {
 
-			if (start.getX() == target.getX() && start.getY() == target.getY() + 1 && !board.isOccupied(target))
+			// one step forward
+			if (start.equals(target, 0, -1) && !board.isOccupied(target))
 				return true;
 
-			if (start.getX() == target.getX() + 1 && start.getY() == target.getY() + 1 && board.isOccupied(target)
-					&& !board.isOwner(player, target))
+			// two step forward
+			if (start.getY() == 7 && start.equals(target, 0, -2) && !board.isOccupied(target))
 				return true;
 
-			if (start.getX() == target.getX() - 1 && start.getY() == target.getY() + 1 && board.isOccupied(target)
-					&& !board.isOwner(player, target))
+			// diagonal capturing
+			if (start.equals(target, 1, -1) && board.isOccupied(target) && !board.isOwner(player, target))
 				return true;
+
+			// diagonal capturing
+			if (start.equals(target, -1, -1) && board.isOccupied(target) && !board.isOwner(player, target))
+				return true;
+
+			System.out.println(start.equals(target, 1, -1));
+			System.out.println(board.isOccupied(target));
+			System.out.println(board.isOwner(player, target));
+			System.out.println(move);
 
 		}
 
