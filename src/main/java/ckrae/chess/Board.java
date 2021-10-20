@@ -1,5 +1,11 @@
 package ckrae.chess;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map.Entry;
+
+import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.lang3.Validate;
 
@@ -8,168 +14,374 @@ import ckrae.chess.pieces.King;
 import ckrae.chess.pieces.Knight;
 import ckrae.chess.pieces.Pawn;
 import ckrae.chess.pieces.Piece;
+import ckrae.chess.pieces.PieceType;
 import ckrae.chess.pieces.Queen;
 import ckrae.chess.pieces.Rook;
 
+/**
+ * The board defines where the pieces are placed.
+ *
+ */
 public class Board {
 
-	public static int size = 8;
+	/**
+	 * Size of the board.
+	 */
+	public static final int SIZE = 8;
 
-	public GameStatus status;
+	/**
+	 * The game map.
+	 */
+	private final MultiKeyMap<Integer, Piece> map;
 
-	private MultiKeyMap<Integer, Piece> map;
+	/**
+	 * The last move that was performed on this board.
+	 */
+	private Move lastMove;
 
-	public Board(Player white, Player black) {
-		init(white, black);
-		this.status = GameStatus.READY;
+	/**
+	 * Create a empty game board.
+	 *
+	 * @return a new game board
+	 */
+	public static Board empty() {
+
+		return new Board();
 	}
 
-	private void init(Player white, Player black) {
+	/**
+	 * Create a game board with chess starting positions.
+	 *
+	 * @return a new game board
+	 */
+	public static Board chess() {
 
-		Validate.notNull(white);
-		Validate.notNull(black);
+		final Board board = new Board();
 
-		map = new MultiKeyMap<Integer, Piece>();
-		setup(map, white, 2);
-		setup(map, black, 7);
+		for (int x = 1; x <= SIZE; x++) {
+			board.addPiece(x, 2, new Pawn(Color.WHITE));
+			board.addPiece(x, SIZE - 1, new Pawn(Color.BLACK));
+		}
 
+		board.addPiece(1, 1, new Rook(Color.WHITE));
+		board.addPiece(2, 1, new Knight(Color.WHITE));
+		board.addPiece(3, 1, new Bishop(Color.WHITE));
+		board.addPiece(4, 1, new Queen(Color.WHITE));
+		board.addPiece(5, 1, new King(Color.WHITE));
+		board.addPiece(6, 1, new Bishop(Color.WHITE));
+		board.addPiece(7, 1, new Knight(Color.WHITE));
+		board.addPiece(8, 1, new Rook(Color.WHITE));
+
+		board.addPiece(1, 8, new Rook(Color.BLACK));
+		board.addPiece(2, 8, new Knight(Color.BLACK));
+		board.addPiece(3, 8, new Bishop(Color.BLACK));
+		board.addPiece(4, 8, new Queen(Color.BLACK));
+		board.addPiece(5, 8, new King(Color.BLACK));
+		board.addPiece(6, 8, new Bishop(Color.BLACK));
+		board.addPiece(7, 8, new Knight(Color.BLACK));
+		board.addPiece(8, 8, new Rook(Color.BLACK));
+
+		return board;
 	}
 
-	private void setup(MultiKeyMap<Integer, Piece> map, Player player, int y) {
+	/**
+	 * Create a game board that is a copy of another game board.
+	 *
+	 * @param board
+	 * @return the new board
+	 */
+	public static Board copy(final Board board) {
 
-		Validate.notNull(map);
-		Validate.isTrue(y == 2 || y == 7);
+		Validate.notNull(board);
 
-		for (int x = 1; x <= 8; x++)
-			map.put(x, y, new Pawn(player));
-
-		if (y == 2)
-			y = 1;
-		else
-			y = 8;
-
-		map.put(1, y, new Rook(player));
-		map.put(2, y, new Knight(player));
-		map.put(3, y, new Bishop(player));
-		map.put(4, y, new Queen(player));
-		map.put(5, y, new King(player));
-		map.put(6, y, new Bishop(player));
-		map.put(7, y, new Knight(player));
-		map.put(8, y, new Rook(player));
-
+		return new Board(board);
 	}
 
-	public void move(Player player, String x, String y) {
-		move(player, new Move(x, y));
+	/**
+	 * Constructor that creates a empty board.
+	 */
+	private Board() {
+		this.map = new MultiKeyMap<>();
 	}
 
-	public void move(Player player, Move move) {
+	/**
+	 * Constructor that create a board that is a copy of another board.
+	 *
+	 * @param board
+	 */
+	private Board(final Board board) {
+		this();
+		for (int x = 1; x <= SIZE; x++) {
+			for (int y = 1; y <= SIZE; y++) {
+				if (board.isOccupied(x, y)) {
+					this.addPiece(x, y, board.getPiece(x, y));
+				}
+			}
+		}
+		this.lastMove = board.getLastMove();
+	}
+
+	/**
+	 * Perform a move on this board.
+	 *
+	 * @param start  String that describes the starting position
+	 * @param target String that describes the target position
+	 */
+	public void move(final String start, final String target) {
+		move(new Move(start, target));
+	}
+
+	/**
+	 * Perform a move on this board. Returns this board in the resulting state.
+	 *
+	 * @param move Move to perform
+	 * @return this board
+	 */
+	public Board move(final Move move) {
 
 		Validate.notNull(move);
-		Validate.notNull(player);
-		Validate.isTrue(isOccupied(move.getStart()), "no piece on " + move.getStart());
-		Validate.isTrue(this.isOwner(player, move.getStart()),
-				" piece on " + move.getStart() + "can't move piece of another player");
 
-		Piece piece = this.getPiece(move.getStart());
-		if (!piece.isLegal(move, this))
+		final Coordinates start = move.getStart();
+		final Coordinates target = move.getTarget();
+
+		if (!isOccupied(start))
+			throw new IllegalMoveException("There is no piece on " + start);
+
+		if (!isLegal(move))
 			throw new IllegalMoveException("this move is illegal " + move);
 
-		if (this.isOccupied(move.getTarget()) && this.getPiece(move.getTarget()) instanceof King)
-			this.status = GameStatus.END;
-		else
-			this.status = GameStatus.RUNNING;
+		final Color movingColor = this.getPiece(start).getColor();
 
-		this.map.removeMultiKey(move.getStart().getX(), move.getStart().getY());
-		this.map.put(move.getTarget().getX(), move.getTarget().getY(), piece);
+		if (move.isEnPassant(this)) {
+			removePiece(this.lastMove.getTarget());
+		}
+
+		if (move.isPromotion(this)) {
+			addPiece(target, new Queen(movingColor));
+
+		} else {
+			addPiece(target, this.getPiece(start));
+		}
+
+		removePiece(start);
+		this.lastMove = move;
+
+		return this;
+	}
+
+	/**
+	 * Add a piece to the board.
+	 *
+	 * @param coor
+	 * @param piece
+	 */
+	public void addPiece(final Coordinates coor, final Piece piece) {
+
+		Validate.notNull(coor);
+
+		addPiece(coor.getX(), coor.getY(), piece);
+	}
+
+	/**
+	 * Add a piece to the board.
+	 *
+	 * @param x
+	 * @param y
+	 * @param piece
+	 */
+	public void addPiece(final int x, final int y, final Piece piece) {
+
+		Validate.notNull(piece);
+
+		this.map.put(x, y, piece);
+	}
+
+	/**
+	 * Remove a piece from the board.
+	 *
+	 * @param coor
+	 */
+	public void removePiece(final Coordinates coor) {
+
+		Validate.notNull(coor);
+
+		this.map.removeMultiKey(coor.getX(), coor.getY());
+	}
+
+	/**
+	 * Get the piece of a field.
+	 *
+	 * @param coor
+	 * @return the piece
+	 */
+	public Piece getPiece(final Coordinates coor) {
+
+		Validate.notNull(coor);
+
+		return getPiece(coor.getX(), coor.getY());
+	}
+
+	/**
+	 * Get the piece of a field.
+	 *
+	 * @param x x coordinate of the field
+	 * @param y y coordinate of the field
+	 * @return the piece
+	 */
+	public Piece getPiece(final int x, final int y) {
+
+		Validate.validState(this.isOccupied(x, y));
+
+		return this.map.get(x, y);
+	}
+
+	/**
+	 * Get all Pieces of a specific color that are still on the game board.
+	 *
+	 * @param color
+	 * @return collection of pieces
+	 */
+	public Collection<Piece> getPieces(final Color color) {
+		final Collection<Piece> res = new ArrayList<>();
+		for (final Piece piece : this.map.values()) {
+			if (piece.getColor() == color) {
+				res.add(piece);
+			}
+		}
+
+		return res;
+	}
+
+	/**
+	 * Get all coordinates that are holding a piece of a specific color.
+	 *
+	 * @param color
+	 * @return collection of coordinates
+	 */
+	public Collection<Coordinates> getCoordinates(final Color color) {
+
+		final List<Coordinates> res = new ArrayList<>();
+		for (final Entry<MultiKey<? extends Integer>, Piece> entry : this.map.entrySet()) {
+			if (entry.getValue().getColor() == color) {
+				final Integer x = entry.getKey().getKey(0);
+				final Integer y = entry.getKey().getKey(1);
+				res.add(new Coordinates(x, y));
+			}
+		}
+
+		return res;
+	}
+
+	/**
+	 * Get all moves that are legal for a given color.
+	 *
+	 * @param color
+	 * @return collection of legal moves
+	 */
+	public Collection<Move> getLegalMoves(final Color color) {
+
+		Validate.notNull(color);
+
+		final Collection<Move> res = new ArrayList<>();
+		for (final Coordinates start : getCoordinates(color)) {
+			final Piece piece = this.getPiece(start);
+			res.addAll(piece.getLegalMoves(start, this));
+		}
+
+		return res;
+	}
+
+	/**
+	 * Check if a move is legal to perform on this board state.
+	 * 
+	 * @param move
+	 * @return
+	 */
+	public boolean isLegal(final Move move) {
+
+		Validate.notNull(move);
+
+		if (!this.isOccupied(move.getStart()))
+			return false;
+
+		return this.getPiece(move.getStart()).isLegal(move, this);
 
 	}
 
-	public boolean isOccupied(Coordinates coor) {
+	/**
+	 * Check if a position contains a game piece.
+	 * 
+	 * @param coor position
+	 * @return true if game piece is present
+	 */
+	public boolean isOccupied(final Coordinates coor) {
 
 		return this.isOccupied(coor.getX(), coor.getY());
 	}
 
-	public boolean isOccupied(int x, int y) {
+	/**
+	 * Check if a position contains a game piece.
+	 * 
+	 * @param x value of position
+	 * @param y value of position
+	 * @return true if game piece is present
+	 */
+	public boolean isOccupied(final int x, final int y) {
 
 		return this.map.containsKey(x, y);
 	}
 
-	public boolean isOwner(Player player, Coordinates coor) {
+	public boolean isOwner(final Player player, final Coordinates coor) {
 
 		Validate.notNull(player);
+
+		return this.isOwner(player.getColor(), coor);
+
+	}
+
+	public boolean isOwner(final Color color, final Coordinates coor) {
+
+		Validate.notNull(color);
 		Validate.notNull(coor);
 
 		if (!this.isOccupied(coor))
 			return false;
 
-		return this.getPiece(coor).getPlayer().equals(player);
-
+		return this.getPiece(coor).getColor().equals(color);
 	}
 
-	public Piece getPiece(Coordinates coor) {
+	public boolean isOwner(final Color color, final int x, final int y) {
 
-		Validate.notNull(coor);
-		Validate.validState(this.isOccupied(coor));
+		if (!this.isOccupied(x, y))
+			return false;
 
-		return getPiece(coor.getX(), coor.getY());
+		return this.getPiece(x, y).getColor().equals(color);
 	}
 
-	public Piece getPiece(int x, int y) {
-
-		return this.map.get(x, y);
-	}
-
-	public boolean victory() {
-
-		return this.status == GameStatus.END;
-	}
-
-	/*
-	 * public Optional<Coordinates> getNextOccupiedTop(Coordinates coor) {
-	 * 
-	 * Validate.notNull(coor);
-	 * 
-	 * if (coor.getY() >= size) return Optional.empty();
-	 * 
-	 * for (int i = coor.getY() + 1; i <= size; i++) if
-	 * (this.isOccupied(coor.getX(), i)) return Optional.of(new
-	 * Coordinates(coor.getX(), i));
-	 * 
-	 * return Optional.empty(); }
-	 * 
-	 * public Optional<Coordinates> getNextOccupiedBot(Coordinates coor) {
-	 * 
-	 * Validate.notNull(coor);
-	 * 
-	 * if (coor.getY() <= 1) return Optional.empty();
-	 * 
-	 * for (int i = coor.getY() - 1; i >= 1; i--) if (this.isOccupied(coor.getX(),
-	 * i)) return Optional.of(new Coordinates(coor.getX(), i));
-	 * 
-	 * return Optional.empty(); }
-	 * 
-	 * public Optional<Coordinates> getNextOccupiedRight(Coordinates coor) {
-	 * 
-	 * Validate.notNull(coor);
-	 * 
-	 * if (coor.getX() >= size) return Optional.empty();
-	 * 
-	 * for (int i = coor.getX() + 1; i <= size; i++) if (this.isOccupied(i,
-	 * coor.getY())) return Optional.of(new Coordinates(i, coor.getY()));
-	 * 
-	 * return Optional.empty(); }
-	 * 
-	 * public Optional<Coordinates> getNextOccupiedLeft(Coordinates coor) {
-	 * 
-	 * Validate.notNull(coor);
-	 * 
-	 * if (coor.getX() <= 1) return Optional.empty();
-	 * 
-	 * for (int i = coor.getX() - 1; i >= 1; i--) if (this.isOccupied(i,
-	 * coor.getY())) return Optional.of(new Coordinates(i, coor.getY()));
-	 * 
-	 * return Optional.empty(); }
+	/**
+	 * Check the player has won the game.
+	 *
+	 * @return true player of color won the game.
 	 */
+	public boolean winCondition(final Player activePlayer) {
+
+		final Color color = activePlayer.getColor().opposite();
+		for (final Piece piece : getPieces(color)) {
+			if (piece.getType() == PieceType.KING)
+				return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Get the last move that was performed on this game board. Return null if no
+	 * move was performed on this board.
+	 * 
+	 * @return the last move.
+	 */
+	public Move getLastMove() {
+		return this.lastMove;
+	}
 
 }

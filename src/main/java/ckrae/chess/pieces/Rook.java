@@ -3,36 +3,33 @@ package ckrae.chess.pieces;
 import org.apache.commons.lang3.Validate;
 
 import ckrae.chess.Board;
-import ckrae.chess.Coordinates;
+import ckrae.chess.Color;
 import ckrae.chess.Move;
-import ckrae.chess.Player;
 
 public class Rook extends Piece {
 
-	public Rook(Player player) {
-		super(player);
+	public Rook(final Color white) {
+		super(white);
 	}
 
 	@Override
-	public boolean isLegal(Move move, Board board) {
+	public boolean isLegal(final Move move, final Board board) {
 
 		Validate.notNull(move);
 		Validate.notNull(board);
 
-		Coordinates start = move.getStart();
-		Coordinates target = move.getTarget();
-
-		int x = start.getX() - target.getX();
-		int y = start.getY() - target.getY();
-
-		if (Math.abs(x) != 0 && Math.abs(y) != 0)
+		if (!move.isHorizontal() && !move.isVertical())
 			return false;
 
-		return true;
+		if (board.isOwner(getColor(), move.getTarget()))
+			return false;
+
+		return !(move.isBlocked(board));
+
 	}
 
 	@Override
-	public String getLetter() {
-		return "R";
+	public PieceType getType() {
+		return PieceType.ROOK;
 	}
 }

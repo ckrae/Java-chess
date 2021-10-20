@@ -3,47 +3,34 @@ package ckrae.chess.pieces;
 import org.apache.commons.lang3.Validate;
 
 import ckrae.chess.Board;
-import ckrae.chess.Coordinates;
+import ckrae.chess.Color;
 import ckrae.chess.Move;
-import ckrae.chess.Player;
 
 public class Queen extends Piece {
 
-	public Queen(Player player) {
-		super(player);
+	public Queen(final Color white) {
+		super(white);
 
 	}
 
 	@Override
-	public boolean isLegal(Move move, Board board) {
+	public boolean isLegal(final Move move, final Board board) {
 
 		Validate.notNull(move);
 		Validate.notNull(board);
 
-		Coordinates start = move.getStart();
-		Coordinates target = move.getTarget();
+		if (!move.isHorizontal() && !move.isVertical() && !move.isDiagonal())
+			return false;
 
-		int x = Math.abs(start.getX() - target.getX());
-		int y = Math.abs(start.getY() - target.getY());
+		if (board.isOwner(getColor(), move.getTarget()))
+			return false;
 
-		// like a bishop
-		if (x == y) {
-			return true;
-
-		}
-
-		// like a rook
-		if (x == 0 || y == 0) {
-			return true;
-
-		}
-
-		return false;
+		return !move.isBlocked(board);
 	}
 
 	@Override
-	public String getLetter() {
-		return "Q";
+	public PieceType getType() {
+		return PieceType.QUEEN;
 	}
 
 }

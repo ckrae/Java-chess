@@ -9,39 +9,58 @@ import ckrae.chess.Board;
 import ckrae.chess.Color;
 import ckrae.chess.Coordinates;
 import ckrae.chess.Move;
-import ckrae.chess.Player;
 
+/**
+ * A chess piece.
+ *
+ */
 public abstract class Piece {
 
-	public Player player;
+	/**
+	 * Defines the color of this piece.
+	 */
+	private final Color color;
 
-	public Piece(Player player) {
+	/**
+	 * Create a new piece.
+	 *
+	 * @param color The color of this piece
+	 */
+	protected Piece(final Color color) {
 
-		Validate.notNull(player);
+		Validate.notNull(color);
 
-		this.player = player;
+		this.color = color;
+
 	}
 
-	public Player getPlayer() {
-
-		return this.player;
-	}
-
-	public Color getColor() {
-		return this.getPlayer().getColor();
-	}
-
+	/**
+	 * Return if a specified move is possible with this kind of piece.
+	 *
+	 * @param move
+	 * @param board
+	 * @return true if the move is legal
+	 */
 	public abstract boolean isLegal(Move move, Board board);
 
-	public Collection<Coordinates> getLegalTargets(Coordinates start, Board board) {
+	/**
+	 * Get all target fields that are reachable by this piece
+	 *
+	 * @param start
+	 * @param board
+	 * @return
+	 */
+	public Collection<Move> getLegalMoves(final Coordinates start, final Board board) {
 
-		Collection<Coordinates> res = new ArrayList<>();
+		final Collection<Move> res = new ArrayList<>();
 
-		for (int x = 0; x <= 8; x++) {
-			for (int y = 0; y <= 8; y++) {
-				Coordinates target = new Coordinates(x, y);
-				if (isLegal(new Move(start, target), board))
-					res.add(target);
+		for (int x = 1; x <= Board.SIZE; x++) {
+			for (int y = 1; y <= Board.SIZE; y++) {
+				final Coordinates target = new Coordinates(x, y);
+				final Move move = new Move(start, target);
+				if (isLegal(move, board)) {
+					res.add(move);
+				}
 			}
 		}
 
@@ -49,9 +68,20 @@ public abstract class Piece {
 
 	}
 
-	public String getLetter() {
-
-		return "X";
+	/**
+	 * Return the color of this piece.
+	 *
+	 * @return the color of this piece
+	 */
+	public Color getColor() {
+		return this.color;
 	}
+
+	/**
+	 * Return the type of this piece.
+	 *
+	 * @return a string of size one
+	 */
+	public abstract PieceType getType();
 
 }

@@ -3,44 +3,35 @@ package ckrae.chess.pieces;
 import org.apache.commons.lang3.Validate;
 
 import ckrae.chess.Board;
-import ckrae.chess.Coordinates;
+import ckrae.chess.Color;
 import ckrae.chess.Move;
-import ckrae.chess.Player;
 
 public class King extends Piece {
 
-	public King(Player player) {
-		super(player);
+	public King(final Color white) {
+		super(white);
 
 	}
 
 	@Override
-	public boolean isLegal(Move move, Board board) {
+	public boolean isLegal(final Move move, final Board board) {
 
 		Validate.notNull(move);
 		Validate.notNull(board);
 
-		Coordinates start = move.getStart();
-		Coordinates target = move.getTarget();
-
-		int x = Math.abs(start.getX() - target.getX());
-		int y = Math.abs(start.getY() - target.getY());
-
-		int distance = x + y;
-
-		if (distance != 1)
+		if (move.isDiagonal() && move.distance() != 2)
 			return false;
 
-		if (!board.isOwner(player, target))
+		if (!move.isDiagonal() && move.distance() != 1)
 			return false;
 
-		return true;
+		return (!board.isOwner(getColor(), move.getTarget()));
 
 	}
 
 	@Override
-	public String getLetter() {
-		return "K";
+	public PieceType getType() {
+		return PieceType.KING;
 	}
 
 }

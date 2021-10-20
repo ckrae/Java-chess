@@ -7,7 +7,7 @@ public class Coordinates {
 	int x;
 	int y;
 
-	public Coordinates(String str) {
+	public Coordinates(final String str) {
 
 		Validate.notNull(str);
 		Validate.matchesPattern(str, "[a-h][1-8]", "no valid coordinate");
@@ -17,7 +17,7 @@ public class Coordinates {
 
 	}
 
-	public Coordinates(int x, int y) {
+	public Coordinates(final int x, final int y) {
 
 		Validate.inclusiveBetween(1, 8, x);
 		Validate.inclusiveBetween(1, 8, y);
@@ -26,7 +26,7 @@ public class Coordinates {
 		this.y = y;
 	}
 
-	public Coordinates(char x, int y) {
+	public Coordinates(final char x, final int y) {
 
 		Validate.inclusiveBetween(97, 105, x);
 		Validate.inclusiveBetween(1, 8, y);
@@ -43,33 +43,37 @@ public class Coordinates {
 		return this.y;
 	}
 
-	public boolean equals(Coordinates target, int x, int y) {
+	public boolean equals(final Coordinates target, final int x, final int y) {
 
-		if (!(this.getX() + x == target.getX()))
+		if (!(getX() + x == target.getX()))
 			return false;
 
-		if (!(this.getY() + y == target.getY()))
+		if (!(getY() + y == target.getY()))
 			return false;
 
 		return true;
 
 	}
 
-	public Coordinates getIncrementX(int x) {
+	public boolean equals(final int x, final int y) {
+		return this.x == x && this.y == y;
+	}
+
+	public Coordinates getIncrementX(final int x) {
 		return new Coordinates(this.x + x, this.y);
 	}
 
-	public Coordinates getIncrementY(int y) {
+	public Coordinates getIncrementY(final int y) {
 		return new Coordinates(this.x, this.y + y);
 	}
 
-	public Coordinates getIncrementXY(int x, int y) {
+	public Coordinates getIncrementXY(final int x, final int y) {
 		return new Coordinates(this.x + x, this.y + y);
 	}
 
 	@Override
 	public String toString() {
-		return "Coordinates [x=" + x + ", y=" + y + "]";
+		return "" + Character.forDigit(this.x + 9, 20) + this.y;
 	}
 
 }
