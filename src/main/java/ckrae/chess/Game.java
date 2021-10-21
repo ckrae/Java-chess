@@ -7,11 +7,6 @@ import ckrae.chess.ai.MinMaxAlgorithm;
 
 public class Game {
 
-	/**
-	 * Status of the game.
-	 */
-	private final GameStatus status = GameStatus.READY;
-
 	private final Player playerWhite;
 	private final Player playerBlack;
 	private Player activePlayer;

@@ -2,14 +2,29 @@ package ckrae.chess;
 
 import org.apache.commons.lang3.Validate;
 
-import ckrae.chess.pieces.Piece;
-import ckrae.chess.pieces.PieceType;
-
+/**
+ * A move represents a movement between a start position and a target position
+ * on a game board.
+ *
+ */
 public class Move {
 
+	/**
+	 * The position of the moving piece.
+	 */
 	private final Coordinates start;
+
+	/**
+	 * The position of the destination.
+	 */
 	private final Coordinates target;
 
+	/**
+	 * Parses a Move from a textual move description.
+	 * 
+	 * @param str input string
+	 * @return the move
+	 */
 	public static Move parse(final String str) {
 
 		Validate.matchesPattern(str, "[a-h][1-8](.*?)[a-h][1-8]", "can not parse move from string " + str);
@@ -41,14 +56,31 @@ public class Move {
 
 	}
 
+	/**
+	 * Return true if this is a horizontal movement. The y-coordinate does not
+	 * change.
+	 * 
+	 * @return true if move is horizontal
+	 */
 	public boolean isHorizontal() {
 		return (this.start.y == this.target.y);
 	}
 
+	/**
+	 * Return true if this is a vertical movement. The x-coordinate does not change.
+	 * 
+	 * @return true if move is vertical.
+	 */
 	public boolean isVertical() {
 		return (this.start.x == this.target.x);
 	}
 
+	/**
+	 * Return true if this move is diagonal. The x-coordinate and the y-coordinate
+	 * change by the same amount.
+	 * 
+	 * @return
+	 */
 	public boolean isDiagonal() {
 
 		final int x = this.start.x - this.target.x;
@@ -57,6 +89,12 @@ public class Move {
 		return (Math.abs(x) == Math.abs(y));
 	}
 
+	/**
+	 * Get the distance between two positions. Counts how many horizontal and
+	 * vertical movements are needed to reach the destination.
+	 * 
+	 * @return
+	 */
 	public int distance() {
 
 		final int x = this.start.x - this.target.x;
@@ -74,56 +112,81 @@ public class Move {
 	 */
 	public boolean isBlocked(final Board board) {
 
-		if (isHorizontal() && this.start.x < this.target.x) {
+		if (isHorizontal())
+			return isBlockedHorizontal(board);
+
+		if (isVertical())
+			return isBlockedVertical(board);
+
+		if (isDiagonal())
+			return isBlockedDiagonal(board);
+
+		return false;
+
+	}
+
+	private boolean isBlockedHorizontal(final Board board) {
+
+		if (this.start.x < this.target.x) {
 			for (int i = this.start.x + 1; i < this.target.x; i++) {
 				if (board.isOccupied(i, this.start.y))
 					return true;
 			}
 		}
 
-		if (isHorizontal() && this.start.x > this.target.x) {
+		if (this.start.x > this.target.x) {
 			for (int i = this.start.x - 1; i > this.target.x; i--) {
 				if (board.isOccupied(i, this.start.y))
 					return true;
 			}
 		}
 
-		if (isVertical() && this.start.y < this.target.y) {
+		return false;
+	}
+
+	private boolean isBlockedVertical(final Board board) {
+
+		if (this.start.y < this.target.y) {
 			for (int i = this.start.y + 1; i < this.target.y; i++) {
 				if (board.isOccupied(this.start.x, i))
 					return true;
 			}
 		}
 
-		if (isVertical() && this.start.y > this.target.y) {
+		if (this.start.y > this.target.y) {
 			for (int i = this.start.y - 1; i > this.target.y; i--) {
 				if (board.isOccupied(this.start.x, i))
 					return true;
 			}
 		}
 
-		if (isDiagonal() && this.start.y < this.target.y && this.start.x < this.target.x) {
+		return false;
+	}
+
+	private boolean isBlockedDiagonal(final Board board) {
+
+		if (this.start.y < this.target.y && this.start.x < this.target.x) {
 			for (int x = this.start.x + 1, y = this.start.y + 1; x < this.target.x; x++, y++) {
 				if (board.isOccupied(x, y))
 					return true;
 			}
 		}
 
-		if (isDiagonal() && this.start.y < this.target.y && this.start.x > this.target.x) {
+		if (this.start.y < this.target.y && this.start.x > this.target.x) {
 			for (int x = this.start.x - 1, y = this.start.y + 1; x > this.target.x; x--, y++) {
 				if (board.isOccupied(x, y))
 					return true;
 			}
 		}
 
-		if (isDiagonal() && this.start.y > this.target.y && this.start.x < this.target.x) {
+		if (this.start.y > this.target.y && this.start.x < this.target.x) {
 			for (int x = this.start.x + 1, y = this.start.y - 1; x < this.target.x; x++, y--) {
 				if (board.isOccupied(x, y))
 					return true;
 			}
 		}
 
-		if (isDiagonal() && this.start.y > this.target.y && this.start.x > this.target.x) {
+		if (this.start.y > this.target.y && this.start.x > this.target.x) {
 			for (int x = this.start.x - 1, y = this.start.y - 1; x > this.target.x; x--, y--) {
 				if (board.isOccupied(x, y))
 					return true;
@@ -131,59 +194,6 @@ public class Move {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Check if this move is a en passant capture on a given board.
-	 *
-	 * @param board
-	 * @return true if move is en passant.
-	 */
-	public boolean isEnPassant(final Board board) {
-
-		if (board.getLastMove() == null)
-			return false;
-
-		final Coordinates lastTarget = board.getLastMove().getTarget();
-		if (board.getPiece(lastTarget).getType() != PieceType.PAWN)
-			return false;
-
-		if (!(isDiagonal() && distance() == 2))
-			return false;
-
-		if (lastTarget.getY() != 4 && lastTarget.getY() != 5)
-			return false;
-
-		if (lastTarget.getX() != this.target.x)
-			return false;
-
-		return (Math.abs(lastTarget.getY() - this.target.y) == 1);
-
-	}
-
-	/**
-	 * Check if this move is a pawn promotion.
-	 * 
-	 * @param board
-	 * @return true if pawn can be promoted
-	 */
-	public boolean isPromotion(final Board board) {
-
-		Validate.notNull(board);
-
-		final Piece movingPiece = board.getPiece(this.start);
-
-		if (movingPiece.getType() != PieceType.PAWN)
-			return false;
-
-		if (this.target.getY() == Board.SIZE && movingPiece.getColor() == Color.WHITE)
-			return true;
-
-		if (this.target.getY() == 1 && movingPiece.getColor() == Color.BLACK)
-			return true;
-
-		return false;
-
 	}
 
 	/**

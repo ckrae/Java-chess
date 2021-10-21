@@ -44,7 +44,25 @@ public abstract class Piece {
 	public abstract boolean isLegal(Move move, Board board);
 
 	/**
-	 * Get all target fields that are reachable by this piece
+	 * Perform a move on the given game board.
+	 * 
+	 * @param move
+	 * @param board
+	 */
+	public void performMove(final Move move, final Board board) {
+
+		Validate.notNull(move);
+		Validate.notNull(board);
+
+		Validate.isTrue(isLegal(move, board));
+
+		board.removePiece(move.getStart());
+		board.addPiece(move.getTarget(), this);
+
+	}
+
+	/**
+	 * Get all target fields that are reachable by this piece.
 	 *
 	 * @param start
 	 * @param board

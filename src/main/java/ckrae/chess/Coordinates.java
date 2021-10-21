@@ -59,14 +59,6 @@ public class Coordinates {
 		return this.x == x && this.y == y;
 	}
 
-	public Coordinates getIncrementX(final int x) {
-		return new Coordinates(this.x + x, this.y);
-	}
-
-	public Coordinates getIncrementY(final int y) {
-		return new Coordinates(this.x, this.y + y);
-	}
-
 	public Coordinates getIncrementXY(final int x, final int y) {
 		return new Coordinates(this.x + x, this.y + y);
 	}

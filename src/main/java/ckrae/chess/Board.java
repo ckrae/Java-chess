@@ -141,29 +141,15 @@ public class Board {
 
 		Validate.notNull(move);
 
-		final Coordinates start = move.getStart();
-		final Coordinates target = move.getTarget();
-
-		if (!isOccupied(start))
-			throw new IllegalMoveException("There is no piece on " + start);
+		if (!isOccupied(move.getStart()))
+			throw new IllegalMoveException("There is no piece on " + move.getStart());
 
 		if (!isLegal(move))
-			throw new IllegalMoveException("this move is illegal " + move);
+			throw new IllegalMoveException("This move is illegal " + move);
 
-		final Color movingColor = this.getPiece(start).getColor();
+		final Piece movingPiece = this.getPiece(move.getStart());
+		movingPiece.performMove(move, this);
 
-		if (move.isEnPassant(this)) {
-			removePiece(this.lastMove.getTarget());
-		}
-
-		if (move.isPromotion(this)) {
-			addPiece(target, new Queen(movingColor));
-
-		} else {
-			addPiece(target, this.getPiece(start));
-		}
-
-		removePiece(start);
 		this.lastMove = move;
 
 		return this;
